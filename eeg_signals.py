@@ -147,7 +147,7 @@ if __name__ == "__main__":
                 'beta_alpha_theta_ratio': safe_device(beta_sums[-1], (theta_sums[-1] + alpha_sums[-1])),
             }
 
-            if safe_device(theta_sums[-1], beta_sums[-1]) < 1.5 and not ARDUINO_USED_ONE_TIME and current_count == 5:
+            if safe_device(theta_sums[-1], beta_sums[-1]) < 1.5 and not ARDUINO_USED_ONE_TIME and current_count == 20:
                 data['beta_theta_ratio'] = 1.6
                 HACk = True
 

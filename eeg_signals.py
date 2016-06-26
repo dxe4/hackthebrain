@@ -12,6 +12,9 @@ except IndexError:
     ser = serial.Serial('/dev/ttyACM1', 9600)
 
 
+SLEEP_TIME = 1
+ARDUINO_MINIMUM_COUNT = 30
+
 alpha_sums = []
 beta_sums = []
 theta_sums = []
@@ -78,42 +81,33 @@ class MuseServer(ServerThread):
         # (src.url, path, types, args)
 
 
-try:
-    server = MuseServer()
-except ServerError, err:
-    raise
-    print str(err)
-    sys.exit()
-server.start()
+def get_signal_data(server, signal):
+    data = copy.copy(server.signal[signal])
+    server.signal[signal] = []
+    _sum = 0
+    count = 0
+    for i in data:
+        _sum += sum(i)
+        count += len(i)
+
+    return _sum / count
 
 if __name__ == "__main__":
-   # io_udp = MuseIOOSC()
-   # io_udp.starit()
+    current_count = 0
+    try:
+        server = MuseServer()
+    except ServerError, err:
+        raise
+        print str(err)
+        sys.exit()
+    server.start()
+
     while True:
-        last_alpha_index = 0
-        last_beta_index = 0
-        time.sleep(10)
-        # print server.signal['conc']
-        alpha = copy.copy(server.signal['alpha_abs'])
-        beta = copy.copy(server.signal['beta_abs'])
-        theta = copy.copy(server.signal['theta_abs'])
+        time.sleep(SLEEP_TIME)
 
-        server.signal['beta_abs'] = []
-        server.signal['alpha_abs'] = []
-        server.signal['theta_abs'] = []
-
-        alpha_sum = 0
-        beta_sum = 0
-        theta_sum = 0
-
-        for alhpa_result in alpha:
-            alpha_sum += sum(alhpa_result)
-
-        for beta_result in beta:
-            beta_sum += sum(beta_result)
-
-        for theta_result in theta:
-            theta_sum += sum(theta_result)
+        alpha_sum = get_signal_data(server, 'alpha_abs')
+        beta_sum = get_signal_data(server, 'beta_abs')
+        theta_sum = get_signal_data(server, 'theta_abs')
 
         alpha_sums.append(alpha_sum)
         beta_sums.append(beta_sum)
@@ -126,5 +120,12 @@ if __name__ == "__main__":
         print("theta", theta_sums[-1])
         print("theta/beta", theta_sums[-1] / beta_sums[-1])
         print("ration 2", beta_sums[-1] / (theta_sums[-1] + alpha_sums[-1]))
+        current_count += 1
+
+        if current_count < ARDUINO_MINIMUM_COUNT:
+            continue
+        else:
+            current_count = 0
+
         if theta_sums[-1] / beta_sums[-1] > 1.5:
             ser.write("s")

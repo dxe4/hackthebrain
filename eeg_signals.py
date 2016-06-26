@@ -4,7 +4,12 @@ import os
 import time
 import copy
 import serial
-ser = serial.Serial('/dev/ttyACM1', 9600)
+
+
+try:
+    ser = serial.Serial(sys.argv[1], 9600)
+except IndexError:
+    ser = serial.Serial('/dev/ttyACM1', 9600)
 
 
 alpha_sums = []

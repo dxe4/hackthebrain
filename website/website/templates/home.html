@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <title>Pusher Test</title>
+  <script src="https://js.pusher.com/3.1/pusher.min.js"></script>
+  <script>
+
+    // Enable pusher logging - don't include this in production
+    Pusher.logToConsole = true;
+
+    var pusher = new Pusher('29fb88f2612d293fc1ab', {
+      cluster: 'eu',
+      encrypted: false
+    });
+
+    var channel = pusher.subscribe('brain_channel');
+    channel.bind('brain_channel', function(data) {
+        console.log(data)
+    });
+  </script>
+</head>
+
+<body>
+
+<div id="container">
+</div>
+
+</body>
+</html>

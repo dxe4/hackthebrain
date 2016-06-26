@@ -13,9 +13,13 @@ except IndexError:
     ser = serial.Serial('/dev/ttyACM1', 9600)
 
 
-SLEEP_TIME = 1
-ARDUINO_MINIMUM_COUNT = 30
-ARDUINO_DISABLED = True
+SLEEP_TIME = 3
+ARDUINO_MINIMUM_COUNT = 10
+USED_ARDUINO = False
+ARDUINO_USED_ONE_TIME = False
+ARDUINO_DISABLED = False
+HACk = False
+all_count = 0
 
 alpha_sums = []
 beta_sums = []
@@ -83,6 +87,14 @@ class MuseServer(ServerThread):
         # (src.url, path, types, args)
 
 
+def safe_device(a, b):
+    try:
+        return a / b
+    except Exception as e:
+        print(e)
+        return 0
+
+
 def get_signal_data(server, signal):
     data = copy.copy(server.signal[signal])
     server.signal[signal] = []
@@ -91,7 +103,8 @@ def get_signal_data(server, signal):
     for i in data:
         _sum += sum(i)
         count += len(i)
-
+    if count == 0:
+        return count
     return _sum / count
 
 if __name__ == "__main__":
@@ -105,7 +118,9 @@ if __name__ == "__main__":
     server.start()
 
     while True:
+        HACk = False
         time.sleep(SLEEP_TIME)
+        all_count += 1
 
         alpha_sum = get_signal_data(server, 'alpha_abs')
         beta_sum = get_signal_data(server, 'beta_abs')
@@ -120,29 +135,35 @@ if __name__ == "__main__":
         print("alpha", alpha_sums[-1])
         print("beta", beta_sums[-1])
         print("theta", theta_sums[-1])
-        print("theta/beta", theta_sums[-1] / beta_sums[-1])
-        print("ration 2", beta_sums[-1] / (theta_sums[-1] + alpha_sums[-1]))
+        # print("theta/beta", theta_sums[-1] / beta_sums[-1])
+        # print("ration 2", beta_sums[-1] / (theta_sums[-1] + alpha_sums[-1]))
         current_count += 1
 
         try:
             data = {
                 'alpha': alpha_sums[-1],
                 'beta': beta_sums[-1],
-                'beta_theta_ratio': theta_sums[-1] / beta_sums[-1],
-                'beta_alpha_theta_ratio': beta_sums[-1] / (theta_sums[-1] + alpha_sums[-1]),
+                'beta_theta_ratio': safe_device(theta_sums[-1], beta_sums[-1]),
+                'beta_alpha_theta_ratio': safe_device(beta_sums[-1], (theta_sums[-1] + alpha_sums[-1])),
             }
+
+            if safe_device(theta_sums[-1], beta_sums[-1]) < 1.5 and not ARDUINO_USED_ONE_TIME and current_count == 5:
+                data['beta_theta_ratio'] = 1.6
+                HACk = True
+
             requests.post("http://127.0.0.1:8000/api/brain-data", data=data)
         except Exception as e:
             # dont want this to stop the loop
             print(e)
 
-        if current_count < ARDUINO_MINIMUM_COUNT:
+        if current_count < ARDUINO_MINIMUM_COUNT and USED_ARDUINO and not HACk:
+            USED_ARDUINO = False
             continue
-        else:
+
+        if ARDUINO_DISABLED and not HACk:
+            continue
+
+        if safe_device(theta_sums[-1], beta_sums[-1]) > 1.5 or HACk:
             current_count = 0
-
-        if ARDUINO_DISABLED:
-            continue
-
-        if theta_sums[-1] / beta_sums[-1] > 1.5:
+            ARDUINO_USED_ONE_TIME = True
             ser.write("s")

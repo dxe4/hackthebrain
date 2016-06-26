@@ -14,6 +14,7 @@ except IndexError:
 
 SLEEP_TIME = 1
 ARDUINO_MINIMUM_COUNT = 30
+ARDUINO_DISABLED = False
 
 alpha_sums = []
 beta_sums = []
@@ -126,6 +127,9 @@ if __name__ == "__main__":
             continue
         else:
             current_count = 0
+
+        if ARDUINO_DISABLED:
+            continue
 
         if theta_sums[-1] / beta_sums[-1] > 1.5:
             ser.write("s")

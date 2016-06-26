@@ -15,13 +15,20 @@
       }
       .line {
           fill: none;
-          stroke: black;
-          stroke-width: 10px;
+          stroke: orange;
+          stroke-width: 15px;
       }
       .axis path, .axis line {
           fill: none;
           stroke: #000;
           shape-rendering: crispEdges;
+      }
+      .red-line {
+          stroke: red !important;
+      } 
+
+      .alert-col {
+        background-color: rgba(204, 0, 0, 0.2);
       }
   </style>
 
@@ -57,27 +64,27 @@
                   data.data.beta_alpha_theta_ratio
                 ]
                 eegData.push(signals);
-                if (data.data.beta_theta_ratio > 1.5) {
-                    $("body").css("background-color", "red")
+                if (typeof window._d3_path !== "undefined") {
+                  if (data.data.beta_theta_ratio > 1.5) {
+                      window._d3_path.classed("red-line", true)
+                  } else {
+                      window._d3_path.classed("red-line", false)
+                  }
+                                      
                 }
 
                 var colIndex = parseInt(data.data.beta_theta_ratio * 6);
+                if (colIndex > 21) {
+                    colIndex = 21;
+                }
                 $("body").css("background-color", colors[colIndex]);
-
-                var html = "<li>"
-                signals.forEach(function(i){
-                  html += "<p>"
-                  html += i.toString()
-                  html += "</p>"
-                })
-                html += "</li>"
 
                 // $("#datalist").append(html)
             });
 var n = 40,
-    duration = 200,
+    duration = 100,
     now = new Date(Date.now() - duration),
-    random = d3.random.normal(0, 0.2),
+    random = d3.random.normal(0, 0.01),
     count = 0,
     data = d3.range(n).map(random);
 
@@ -115,6 +122,8 @@ var svg = d3.select("body").append("svg")
     .append("g")
     .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
 
+window._my_svg = svg;
+
 svg.append("defs").append("clipPath")
     .attr("id", "clip")
     .append("rect")
@@ -136,9 +145,11 @@ var path = svg.append("g")
     .datum(data)
     .attr("class", "line");
 
+window._d3_path = path; 
+
 
 var transition = d3.select({}).transition()
-    .duration(750)
+    .duration(100)
     .ease("linear");
 
 tick();
@@ -154,6 +165,7 @@ function tick() {
         if (eegData.length > 1) {
             var copyData = JSON.parse(JSON.stringify(eegData));
             eegData = [];
+
             copyData.forEach(function(i){
                   // push a new data point onto the back
                   data.push(i[2]);

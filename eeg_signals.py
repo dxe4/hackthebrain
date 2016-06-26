@@ -15,7 +15,7 @@ except IndexError:
 
 SLEEP_TIME = 1
 ARDUINO_MINIMUM_COUNT = 30
-ARDUINO_DISABLED = True
+ARDUINO_DISABLED = False
 
 alpha_sums = []
 beta_sums = []

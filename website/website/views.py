@@ -35,3 +35,17 @@ class PostDataView(mixins.CreateModelMixin, generics.GenericAPIView):
         )
 
         return Response(serializer.data, status=201)
+
+
+def get_file(request):
+    from django.conf import settings
+    from django.core.servers.basehttp import FileWrapper
+    from django.shortcuts import HttpResponse
+
+    import os
+
+    filename = os.path.join(settings.BASE_DIR, "the_mp3.mp3")
+    wrapper = FileWrapper(file(filename))
+    response = HttpResponse(wrapper, content_type='audio/mp3')
+    response['Content-Length'] = os.path.getsize(filename)
+    return response

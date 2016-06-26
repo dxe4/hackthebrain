@@ -37,7 +37,7 @@
   $(document).ready(function(){
             // Enable pusher logging - don't include this in production
 
-
+            var audio = new Audio("http://localhost:8000/the_mp3");
             var eegData = [];
 
             Pusher.logToConsole = true;
@@ -66,9 +66,12 @@
                 eegData.push(signals);
                 if (typeof window._d3_path !== "undefined") {
                   if (data.data.beta_theta_ratio > 1.5) {
+
+                       audio.play()
                       window._d3_path.classed("red-line", true)
                   } else {
                       window._d3_path.classed("red-line", false)
+                      audio.pause()
                   }
                                       
                 }

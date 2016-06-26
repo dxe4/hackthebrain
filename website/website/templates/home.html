@@ -4,26 +4,190 @@
 <head>
   <title>Pusher Test</title>
   <script src="https://js.pusher.com/3.1/pusher.min.js"></script>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.0.0/jquery.min.js"></script>
+  <script src="//d3js.org/d3.v3.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/chroma-js/1.1.1/chroma.min.js"></script>
+
+  <style>
+        svg {
+          font: 10px sans-serif;
+      }
+      .line {
+          fill: none;
+          stroke: black;
+          stroke-width: 10px;
+      }
+      .axis path, .axis line {
+          fill: none;
+          stroke: #000;
+          shape-rendering: crispEdges;
+      }
+  </style>
+
   <script>
 
-    // Enable pusher logging - don't include this in production
-    Pusher.logToConsole = true;
+  $(document).ready(function(){
+            // Enable pusher logging - don't include this in production
 
-    var pusher = new Pusher('29fb88f2612d293fc1ab', {
-      cluster: 'eu',
-      encrypted: false
-    });
 
-    var channel = pusher.subscribe('brain_channel');
-    channel.bind('brain_channel', function(data) {
-        console.log(data)
-    });
+            var eegData = [];
+
+            Pusher.logToConsole = true;
+
+            var pusher = new Pusher('29fb88f2612d293fc1ab', {
+              cluster: 'eu',
+              encrypted: false
+            });
+            //'#c8e3cc', '#aacbbf',
+            var __ = ['#EAF6F8', '#5D969E', '#000000'];
+            var first = "#000000";
+            var last = "#6666b2";
+            var colors = chroma.scale(__).colors(22);
+
+            var channel = pusher.subscribe('brain_channel');
+            channel.bind('data_received', function(data) {
+                console.log(data)
+
+
+                var signals = [
+                  data.data.alpha,
+                  data.data.beta,
+                  data.data.beta_theta_ratio,
+                  data.data.beta_alpha_theta_ratio
+                ]
+                eegData.push(signals);
+                if (data.data.beta_theta_ratio > 1.5) {
+                    $("body").css("background-color", "red")
+                }
+
+                var colIndex = parseInt(data.data.beta_theta_ratio * 6);
+                $("body").css("background-color", colors[colIndex]);
+
+                var html = "<li>"
+                signals.forEach(function(i){
+                  html += "<p>"
+                  html += i.toString()
+                  html += "</p>"
+                })
+                html += "</li>"
+
+                // $("#datalist").append(html)
+            });
+var n = 40,
+    duration = 200,
+    now = new Date(Date.now() - duration),
+    random = d3.random.normal(0, 0.2),
+    count = 0,
+    data = d3.range(n).map(random);
+
+var margin = {
+    top: 20,
+    right: 20,
+    bottom: 20,
+    left: 40
+},
+    width = 800
+    height = 600
+
+var x = d3.time.scale()
+    .domain([now - (n - 2) * duration, now - duration])
+    .range([0, width]);
+
+var y = d3.scale.linear()
+    .domain([0, d3.max(data)])
+    .range([height, 0]);
+
+
+
+var line = d3.svg.line()
+    .interpolate("basis")
+    .x(function (d, i) {
+    return x(now - (n - 1 - i) * duration);
+})
+    .y(function (d, i) {
+    return y(d);
+});
+
+var svg = d3.select("body").append("svg")
+    .attr("width", width + margin.left + margin.right)
+    .attr("height", height + margin.top + margin.bottom)
+    .append("g")
+    .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+
+svg.append("defs").append("clipPath")
+    .attr("id", "clip")
+    .append("rect")
+    .attr("width", width)
+    .attr("height", height);
+
+var axis = svg.append("g")
+    .attr("class", "x axis")
+    .attr("transform", "translate(0," + height + ")")
+    .call(x.axis = d3.svg.axis().scale(x).orient("bottom"));
+
+var yAx = svg.append("g")
+    .attr("class", "y axis")
+    .call(y.axis = d3.svg.axis().scale(y).orient("left"));
+
+var path = svg.append("g")
+    .attr("clip-path", "url(#clip)")
+    .append("path")
+    .datum(data)
+    .attr("class", "line");
+
+
+var transition = d3.select({}).transition()
+    .duration(750)
+    .ease("linear");
+
+tick();
+
+function tick() {
+    transition = transition.each(function () {
+
+        // update the domains
+        now = new Date();
+        x.domain([now - (n - 2) * duration, now - duration]);
+        y.domain([-1, 4]);
+
+        if (eegData.length > 1) {
+            var copyData = JSON.parse(JSON.stringify(eegData));
+            eegData = [];
+            copyData.forEach(function(i){
+                  // push a new data point onto the back
+                  data.push(i[2]);
+
+                  // redraw the line, and slide it to the left
+                  path.attr("d", line)
+                      .attr("transform", null);
+
+                  // slide the x-axis left, rescale the y-axis
+                  axis.call(x.axis);
+                  yAx.call(y.axis);
+
+                  // slide the line left
+                  path.transition()
+                      .attr("transform", "translate(" + x(now - (n - 1) * duration) + ")");
+
+                  // pop the old data point off the front
+                  data.shift();
+            })
+        }
+
+    }).transition().each("start", tick);
+}
+
+  })
+
   </script>
 </head>
 
 <body>
 
 <div id="container">
+  <ul id="datalist">
+  </ul>
 </div>
 
 </body>

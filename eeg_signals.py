@@ -4,6 +4,7 @@ import os
 import time
 import copy
 import serial
+import requests
 
 
 try:
@@ -14,7 +15,7 @@ except IndexError:
 
 SLEEP_TIME = 1
 ARDUINO_MINIMUM_COUNT = 30
-ARDUINO_DISABLED = False
+ARDUINO_DISABLED = True
 
 alpha_sums = []
 beta_sums = []
@@ -122,6 +123,18 @@ if __name__ == "__main__":
         print("theta/beta", theta_sums[-1] / beta_sums[-1])
         print("ration 2", beta_sums[-1] / (theta_sums[-1] + alpha_sums[-1]))
         current_count += 1
+
+        try:
+            data = {
+                'alpha': alpha_sums[-1],
+                'beta': beta_sums[-1],
+                'beta_theta_ratio': theta_sums[-1] / beta_sums[-1],
+                'beta_alpha_theta_ratio': beta_sums[-1] / (theta_sums[-1] + alpha_sums[-1]),
+            }
+            requests.post("http://127.0.0.1:8000/api/brain-data", data=data)
+        except Exception as e:
+            # dont want this to stop the loop
+            print(e)
 
         if current_count < ARDUINO_MINIMUM_COUNT:
             continue

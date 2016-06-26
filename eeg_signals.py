@@ -17,7 +17,7 @@ SLEEP_TIME = 3
 ARDUINO_MINIMUM_COUNT = 10
 USED_ARDUINO = False
 ARDUINO_USED_ONE_TIME = False
-ARDUINO_DISABLED = False
+ARDUINO_DISABLED = True
 HACk = False
 all_count = 0
 
@@ -156,7 +156,7 @@ if __name__ == "__main__":
             # dont want this to stop the loop
             print(e)
 
-        if current_count < ARDUINO_MINIMUM_COUNT and USED_ARDUINO and not HACk:
+        if current_count < ARDUINO_MINIMUM_COUNT and ARDUINO_USED_ONE_TIME and not HACk:
             USED_ARDUINO = False
             continue
 
@@ -164,6 +164,8 @@ if __name__ == "__main__":
             continue
 
         if safe_device(theta_sums[-1], beta_sums[-1]) > 1.5 or HACk:
+            HACk = False
             current_count = 0
+            USED_ARDUINO = True
             ARDUINO_USED_ONE_TIME = True
             ser.write("s")

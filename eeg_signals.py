@@ -135,8 +135,8 @@ if __name__ == "__main__":
         print("alpha", alpha_sums[-1])
         print("beta", beta_sums[-1])
         print("theta", theta_sums[-1])
-        # print("theta/beta", theta_sums[-1] / beta_sums[-1])
-        # print("ration 2", beta_sums[-1] / (theta_sums[-1] + alpha_sums[-1]))
+        print("theta/beta", safe_device(theta_sums[-1], beta_sums[-1]))
+        print("ration 2", safe_device(beta_sums[-1], (theta_sums[-1] + alpha_sums[-1])))
         current_count += 1
 
         try:

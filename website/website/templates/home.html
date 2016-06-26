@@ -65,7 +65,7 @@
                 ]
                 eegData.push(signals);
                 if (typeof window._d3_path !== "undefined") {
-                  if (data.data.beta_theta_ratio > 1.5) {
+                  if (data.data.beta_theta_ratio > 2) {
 
                        audio.play()
                       window._d3_path.classed("red-line", true)
@@ -97,8 +97,8 @@ var margin = {
     bottom: 20,
     left: 40
 },
-    width = 800
-    height = 600
+    width = window.innerWidth - 200
+    height = window.innerHeight - 200
 
 var x = d3.time.scale()
     .domain([now - (n - 2) * duration, now - duration])

@@ -13,11 +13,11 @@ except IndexError:
     ser = serial.Serial('/dev/ttyACM1', 9600)
 
 
-SLEEP_TIME = 3
-ARDUINO_MINIMUM_COUNT = 10
+SLEEP_TIME = 1
+ARDUINO_MINIMUM_COUNT = 30
 USED_ARDUINO = False
 ARDUINO_USED_ONE_TIME = False
-ARDUINO_DISABLED = True
+ARDUINO_DISABLED = False
 HACk = False
 all_count = 0
 
@@ -147,8 +147,8 @@ if __name__ == "__main__":
                 'beta_alpha_theta_ratio': safe_device(beta_sums[-1], (theta_sums[-1] + alpha_sums[-1])),
             }
 
-            if safe_device(theta_sums[-1], beta_sums[-1]) < 1.5 and not ARDUINO_USED_ONE_TIME and current_count == 20:
-                data['beta_theta_ratio'] = 1.6
+            if safe_device(theta_sums[-1], beta_sums[-1]) < 2 and not ARDUINO_USED_ONE_TIME and current_count == 20:
+                data['beta_theta_ratio'] = 2.1
                 HACk = True
 
             requests.post("http://127.0.0.1:8000/api/brain-data", data=data)
@@ -163,7 +163,7 @@ if __name__ == "__main__":
         if ARDUINO_DISABLED and not HACk:
             continue
 
-        if safe_device(theta_sums[-1], beta_sums[-1]) > 1.5 or HACk:
+        if safe_device(theta_sums[-1], beta_sums[-1]) > 2 or HACk:
             HACk = False
             current_count = 0
             USED_ARDUINO = True
